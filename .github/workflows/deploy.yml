@@ -42,8 +42,8 @@ jobs:
             # 重启服务 (停止旧进程，启动新进程)
             echo "Restarting bot service..."
 
-            # 查找并停止旧进程
-            pkill -f "python -m bot" || true
+            # 查找并停止旧进程, [b]正则防止杀掉自己
+            pkill -f "python -m [b]ot" || true
             sleep 2
 
             # 启动新进程 (后台运行)
