@@ -19,35 +19,66 @@ jobs:
           port: ${{ secrets.SSH_PORT }}
           script_stop: true
           script: |
-            # echo PATH
-            echo $PATH | tr ':' '\n'
-
-            # 添加 uv 到 PATH（根据实际安装路径调整）
-            export PATH=$PATH:/home/kartone/.local/bin
-
-            # 设置变量
+            # ==========================================
+            # 1. 环境配置 (Environment Setup)
+            # ==========================================
+            # 显式加载 uv 路径 (解决 .bashrc 非交互模式不加载的问题)
+            export PATH=$PATH:$HOME/.local/bin
+            
+            # 定义关键变量
             SERVER_PATH="${{ secrets.SERVER_PATH }}"
+            PID_FILE="$SERVER_PATH/bot.pid"
+            LOG_FILE="$SERVER_PATH/bot.log"
 
-            # 进入项目目录
-            cd "$SERVER_PATH" || exit 1
+            # ==========================================
+            # 2. 代码更新 (Update Code)
+            # ==========================================
+            # 进入项目目录，如果目录不存在则报错退出
+            cd "$SERVER_PATH" || { echo "Directory not found!"; exit 1; }
 
-            # 拉取最新代码
-            echo "Pulling latest code..."
+            echo "🚀 Pulling latest code..."
             git pull origin main
 
-            # 同步依赖
-            echo "Syncing dependencies with uv..."
+            # ==========================================
+            # 3. 依赖同步 (Sync Dependencies)
+            # ==========================================
+            echo "📦 Syncing dependencies with uv..."
             uv sync
 
-            # 重启服务 (停止旧进程，启动新进程)
-            echo "Restarting bot service..."
+            # ==========================================
+            # 4. 停止旧进程 (Stop Old Process via PID)
+            # ==========================================
+            echo "🛑 Checking for running process..."
+            if [ -f "$PID_FILE" ]; then
+                OLD_PID=$(cat "$PID_FILE")
+                echo "Found PID file: $OLD_PID"
+                
+                # 检查进程是否存在 (kill -0 不发送信号，只检查)
+                if kill -0 "$OLD_PID" 2>/dev/null; then
+                    echo "Killing process $OLD_PID..."
+                    kill "$OLD_PID"
+                    # 等待进程完全退出 (可选)
+                    sleep 2
+                else
+                    echo "Process $OLD_PID is not running."
+                fi
+                # 删除旧的 PID 文件
+                rm "$PID_FILE"
+            else
+                echo "No PID file found. Skipping stop."
+            fi
 
-            # 查找并停止旧进程, [b]正则防止杀掉自己
-            pkill -f "python -m [b]ot" || true
-            sleep 2
-
-            # 启动新进程 (后台运行)
-            nohup uv run python -m bot > bot.log 2>&1 &
-
-            echo "Deployment completed successfully!"
-            echo "Bot is running in background. Check logs with: tail -f $SERVER_PATH/bot.log"
+            # ==========================================
+            # 5. 启动新进程 (Start New Process)
+            # ==========================================
+            echo "✅ Starting new bot process..."
+            
+            # 后台运行，重定向输出日志
+            nohup uv run python -m bot > "$LOG_FILE" 2>&1 &
+            
+            # 获取刚刚启动的进程 ID ($!) 并写入文件
+            NEW_PID=$!
+            echo "$NEW_PID" > "$PID_FILE"
+            
+            echo "🎉 Bot started successfully with PID: $NEW_PID"
+            echo "📄 Logs are being written to: $LOG_FILE"
