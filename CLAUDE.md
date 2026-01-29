@@ -76,9 +76,9 @@ telegram/
 |------|----------|------|------|
 | `/start` | `start()` | chat.py | 重置聊天历史，显示帮助 |
 | `/help` | `help_cmd()` | chat.py | 显示所有命令帮助 |
-| `/sleep_on [HH:MM]` | `sleep_on()` | sleep_reminder.py | 开启/配置提醒 |
-| `/sleep_off` | `sleep_off()` | sleep_reminder.py | 关闭提醒，删除任务 |
-| `/sleep_status` | `sleep_status()` | sleep_reminder.py | 显示当前提醒设置 |
+| `/sleepon [HH:MM]` | `sleep_on()` | bot/handlers/sleep.py | 开启/配置提醒 |
+| `/sleepoff` | `sleep_off()` | bot/handlers/sleep.py | 关闭提醒，删除任务 |
+| `/sleepstatus` | `sleep_status()` | bot/handlers/sleep.py | 显示当前提醒设置 |
 | (文本消息) | `chat_logic()` | chat.py | AI 聊天处理 |
 
 **关键设计模式：**

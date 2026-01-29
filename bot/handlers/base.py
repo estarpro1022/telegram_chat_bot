@@ -15,9 +15,9 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "可用命令：\n"
         "/start - 清空记忆重新开始\n"
         "/help - 查看所有命令\n"
-        "/sleep_on [HH:MM] - 开启睡眠提醒（可自定义时间）\n"
-        "/sleep_off - 关闭睡眠提醒\n"
-        "/sleep_status - 查看睡眠提醒状态"
+        "/sleepon [HH:MM] - 开启睡眠提醒（可自定义时间）\n"
+        "/sleepoff - 关闭睡眠提醒\n"
+        "/sleepstatus - 查看睡眠提醒状态"
     )
 
 
@@ -30,9 +30,9 @@ async def help_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
 /help - 显示此帮助信息
 
 💤 睡眠提醒命令：
-/sleep_on [HH:MM] - 开启提醒，可指定时间（默认 {Config.DEFAULT_REMINDER_TIME}）
-/sleep_off - 关闭睡眠提醒
-/sleep_status - 查看当前提醒设置
+/sleepon [HH:MM] - 开启提醒，可指定时间（默认 {Config.DEFAULT_REMINDER_TIME}）
+/sleepoff - 关闭睡眠提醒
+/sleepstatus - 查看当前提醒设置
 
 💡 直接发送文字即可与 AI 聊天！"""
     await update.message.reply_text(help_text)
