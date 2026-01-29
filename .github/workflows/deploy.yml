@@ -1,0 +1,50 @@
+name: Deploy to Remote Server
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to server via SSH
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script_stop: true
+          script: |
+            # 设置变量
+            SERVER_PATH="${{ secrets.SERVER_PATH }}"
+
+            # 进入项目目录
+            cd "$SERVER_PATH" || exit 1
+
+            # 拉取最新代码
+            echo "Pulling latest code..."
+            git pull origin main
+
+            # 同步依赖
+            echo "Syncing dependencies with uv..."
+            uv sync
+
+            # 重启服务 (停止旧进程，启动新进程)
+            echo "Restarting bot service..."
+
+            # 查找并停止旧进程
+            pkill -f "python -m bot" || true
+            sleep 2
+
+            # 启动新进程 (后台运行)
+            nohup uv run python -m bot > bot.log 2>&1 &
+
+            echo "Deployment completed successfully!"
+            echo "Bot is running in background. Check logs with: tail -f $SERVER_PATH/bot.log"
