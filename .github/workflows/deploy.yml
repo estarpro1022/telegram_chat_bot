@@ -1,84 +1,96 @@
-name: Deploy to Remote Server
+name: Deploy to Cloud on push main
 
 on:
   push:
-    branches:
-      - main
+    branches: ["main"]
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    concurrency:
+      group: deploy
+      cancel-in-progress: true
 
     steps:
-      - name: Deploy to server via SSH
-        uses: appleboy/ssh-action@v1.0.0
+      - name: Connect & deploy over SSH
+        uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT }}
-          script_stop: true
           script: |
+            set -e
+
             # ==========================================
-            # 1. 环境配置 (Environment Setup)
+            # 环境配置 (Environment Setup)
             # ==========================================
+            APP_DIR="${{ secrets.SERVER_PATH }}"
+            PID_FILE="$APP_DIR/bot.pid"
+            LOG_FILE="$APP_DIR/bot.log"
+
             # 显式加载 uv 路径 (解决 .bashrc 非交互模式不加载的问题)
             export PATH=$PATH:$HOME/.local/bin
-            
-            # 定义关键变量
-            SERVER_PATH="${{ secrets.SERVER_PATH }}"
-            PID_FILE="$SERVER_PATH/bot.pid"
-            LOG_FILE="$SERVER_PATH/bot.log"
+
+            # 打印调试信息
+            echo "=== DEBUG INFO ==="
+            echo "uv location: $(which uv)"
+            echo "uv version: $(uv --version)"
+            echo "=================="
 
             # ==========================================
-            # 2. 代码更新 (Update Code)
+            # 代码更新 (Update Code)
             # ==========================================
-            # 进入项目目录，如果目录不存在则报错退出
-            cd "$SERVER_PATH" || { echo "Directory not found!"; exit 1; }
+            cd "$APP_DIR"
 
-            echo "🚀 Pulling latest code..."
-            git pull origin main
+            echo "🔄 Fetching latest code..."
+            git remote -v
+            git fetch --all
+            git reset --hard origin/main
 
             # ==========================================
-            # 3. 依赖同步 (Sync Dependencies)
+            # 依赖同步 (Sync Dependencies)
             # ==========================================
             echo "📦 Syncing dependencies with uv..."
             uv sync
 
             # ==========================================
-            # 4. 停止旧进程 (Stop Old Process via PID)
+            # 停止旧进程 (Stop Old Process with Graceful Shutdown)
             # ==========================================
             echo "🛑 Checking for running process..."
             if [ -f "$PID_FILE" ]; then
-                OLD_PID=$(cat "$PID_FILE")
-                echo "Found PID file: $OLD_PID"
-                
-                # 检查进程是否存在 (kill -0 不发送信号，只检查)
-                if kill -0 "$OLD_PID" 2>/dev/null; then
-                    echo "Killing process $OLD_PID..."
-                    kill "$OLD_PID"
-                    # 等待进程完全退出 (可选)
-                    sleep 2
-                else
-                    echo "Process $OLD_PID is not running."
+              OLD_PID="$(cat "$PID_FILE" || true)"
+              if [ -n "$OLD_PID" ] && kill -0 "$OLD_PID" >/dev/null 2>&1; then
+                echo "Stopping old process: $OLD_PID"
+                kill "$OLD_PID" || true
+
+                # 最多等 10 秒让进程优雅退出
+                for i in $(seq 1 10); do
+                  if kill -0 "$OLD_PID" >/dev/null 2>&1; then
+                    sleep 1
+                  else
+                    break
+                  fi
+                done
+
+                # 若还活着就强杀
+                if kill -0 "$OLD_PID" >/dev/null 2>&1; then
+                  echo "Force killing $OLD_PID"
+                  kill -9 "$OLD_PID" || true
                 fi
-                # 删除旧的 PID 文件
-                rm "$PID_FILE"
+              fi
+              rm -f "$PID_FILE"
             else
-                echo "No PID file found. Skipping stop."
+              echo "No PID file found. Skipping stop."
             fi
 
             # ==========================================
-            # 5. 启动新进程 (Start New Process)
+            # 启动新进程 (Start New Process)
             # ==========================================
             echo "✅ Starting new bot process..."
-            
-            # 后台运行，重定向输出日志
             nohup uv run python -m bot > "$LOG_FILE" 2>&1 &
-            
-            # 获取刚刚启动的进程 ID ($!) 并写入文件
             NEW_PID=$!
             echo "$NEW_PID" > "$PID_FILE"
-            
+
             echo "🎉 Bot started successfully with PID: $NEW_PID"
             echo "📄 Logs are being written to: $LOG_FILE"
