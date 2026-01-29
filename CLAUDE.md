@@ -11,10 +11,10 @@
 ### 运行机器人
 ```bash
 # 运行主 AI 聊天机器人
-python chat.py
+uv run chat.py
 
 # 运行简单模板机器人
-python main.py
+uv run main.py
 ```
 
 ### 依赖管理
