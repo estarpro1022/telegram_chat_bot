@@ -1,0 +1,11 @@
+[project]
+name = "telegram"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "python-telegram-bot[job-queue]>=20.0",
+    "google-cloud-aiplatform",
+    "pytz",
+]
