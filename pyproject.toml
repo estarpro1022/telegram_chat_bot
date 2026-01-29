@@ -1,11 +1,15 @@
 [project]
-name = "telegram"
+name = "telegram-ai-bot"
 version = "0.1.0"
-description = "Add your description here"
+description = "Telegram AI assistant bot with Vertex AI integration"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "python-telegram-bot[job-queue]>=20.0",
     "google-cloud-aiplatform",
     "pytz",
+    "python-dotenv",
 ]
+
+[project.scripts]
+bot = "bot.__main__:main"
