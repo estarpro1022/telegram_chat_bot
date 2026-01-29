@@ -19,8 +19,11 @@ jobs:
           port: ${{ secrets.SSH_PORT }}
           script_stop: true
           script: |
-            # 加载 shell 配置（解决 PATH 问题）
-            source ~/.bashrc
+            # echo PATH
+            echo $PATH | tr ':' '\n'
+
+            # 添加 uv 到 PATH（根据实际安装路径调整）
+            export PATH=$PATH:/home/kartone/.local/bin
 
             # 设置变量
             SERVER_PATH="${{ secrets.SERVER_PATH }}"
