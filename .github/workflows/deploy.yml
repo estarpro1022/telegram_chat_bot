@@ -10,9 +10,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
       - name: Deploy to server via SSH
         uses: appleboy/ssh-action@v1.0.0
         with:
@@ -22,6 +19,9 @@ jobs:
           port: ${{ secrets.SSH_PORT }}
           script_stop: true
           script: |
+            # 加载 shell 配置（解决 PATH 问题）
+            source ~/.bashrc
+
             # 设置变量
             SERVER_PATH="${{ secrets.SERVER_PATH }}"
 
