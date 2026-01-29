@@ -109,6 +109,73 @@ Config.DEFAULT_REMINDER_TIME
 Config.BEIJING_TZ
 ```
 
+## 测试指南
+
+### 测试框架
+
+项目使用 pytest 作为测试框架，配合以下插件：
+- **pytest-asyncio** - 异步测试支持
+- **pytest-cov** - 覆盖率报告
+- **pytest-mock** - Mock 对象
+- **pytest-freezegun** - 时间冻结
+
+### 运行测试
+
+```bash
+# 安装开发依赖
+uv sync --all-extras
+
+# 运行所有测试
+uv run pytest
+
+# 运行特定测试文件
+uv run pytest tests/unit/test_config.py
+
+# 运行特定测试类或函数
+uv run pytest tests/unit/test_services/test_ai.py::TestGetUserChat
+
+# 查看覆盖率报告
+uv run pytest --cov=bot --cov-report=html
+# 打开 htmlcov/index.html
+
+# 运行带标记的测试
+uv run pytest -m unit        # 只运行单元测试
+uv run pytest -m integration # 只运行集成测试
+```
+
+### 编写测试
+
+1. **测试目录结构**
+   - `tests/unit/` - 单元测试
+   - `tests/integration/` - 集成测试
+   - `tests/fixtures/` - 共享 fixtures
+
+2. **测试命名规范**
+   - 文件名：`test_*.py`
+   - 类名：`Test*`
+   - 函数名：`test_*`
+
+3. **异步测试**
+   - 所有异步测试函数使用 `@pytest.mark.asyncio` 装饰器
+   - `asyncio_mode = "auto"` 在 conftest.py 中配置
+
+4. **使用 Fixtures**
+   - Telegram 对象：从 `tests/fixtures/telegram.py` 导入
+   - Vertex AI mock：从 `tests/fixtures/vertex.py` 导入
+   - 环境变量在 `conftest.py` 中自动设置
+
+### Mock 策略
+
+- **外部 API 必须mock**：Vertex AI、Telegram Bot API
+- **使用共享 fixtures**：避免重复创建 mock 对象
+- **不要连接真实服务**：测试不应调用实际的外部 API
+
+### 测试覆盖率
+
+- 目标覆盖率：**80%**
+- 关键模块目标 90%+（config、handlers）
+- 查看未覆盖的行：`uv run pytest --cov=bot --cov-report=term-missing`
+
 ## 重要说明
 
 - **无数据持久化**：重启后所有聊天历史和提醒设置都会丢失

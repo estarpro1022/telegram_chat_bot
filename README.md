@@ -73,11 +73,44 @@ uv run bot
 /sleepoff         # 关闭提醒
 ```
 
+## 测试
+
+### 运行测试
+
+```bash
+# 安装开发依赖
+uv sync --all-extras
+
+# 运行所有测试
+uv run pytest
+
+# 运行特定测试
+uv run pytest tests/unit/test_config.py
+
+# 查看覆盖率报告
+uv run pytest --cov=bot --cov-report=html
+# 打开 htmlcov/index.html
+```
+
+### 测试文档
+
+完整的测试文档请参阅：[TESTING.md](TESTING.md)
+
+- 测试概览与覆盖率
+- 编写测试指南
+- Mock 策略
+- 常见问题解答
+
+### 测试覆盖率
+
+项目目标测试覆盖率：**80%**
+
 ## 技术栈
 
 - **python-telegram-bot** - Telegram Bot API 封装
 - **google-cloud-aiplatform** - Vertex AI SDK
 - **pytz** - 时区处理
+- **pytest** - 测试框架
 
 ## 项目结构
 
