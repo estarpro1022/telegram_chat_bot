@@ -30,18 +30,28 @@ uv sync
 
 ### 配置
 
-编辑 `chat.py` 中的配置项：
+复制 `.env.example` 为 `.env` 并填入你的配置：
 
-```python
-TELEGRAM_TOKEN = "你的_Bot_Token"
-PROJECT_ID = "你的_Google_Cloud_项目_ID"
-LOCATION = "us-central1"  # 或 asia-east1 等
+```bash
+cp .env.example .env
+```
+
+编辑 `.env` 文件：
+
+```bash
+TELEGRAM_TOKEN=你的_Bot_Token
+PROJECT_ID=你的_Google_Cloud_项目_ID
+LOCATION=us-central1
 ```
 
 ### 运行
 
 ```bash
-uv run chat.py
+# 方式1：运行模块（推荐）
+uv run python -m bot
+
+# 方式2：使用命令行入口
+uv run bot
 ```
 
 ## 命令列表
@@ -50,17 +60,17 @@ uv run chat.py
 |------|------|
 | `/start` | 清空对话记忆，重新开始 |
 | `/help` | 显示所有命令帮助 |
-| `/sleep_on [HH:MM]` | 开启睡眠提醒，可指定时间（默认 23:30）|
-| `/sleep_off` | 关闭睡眠提醒 |
-| `/sleep_status` | 查看当前提醒设置 |
+| `/sleepon [HH:MM]` | 开启睡眠提醒，可指定时间（默认 23:30）|
+| `/sleepoff` | 关闭睡眠提醒 |
+| `/sleepstatus` | 查看当前提醒设置 |
 
 ### 使用示例
 
 ```
-/sleep_on          # 使用默认时间 23:30
-/sleep_on 22:10    # 自定义时间 22:10
-/sleep_status      # 查看提醒状态
-/sleep_off         # 关闭提醒
+/sleepon          # 使用默认时间 23:30
+/sleepon 22:10    # 自定义时间 22:10
+/sleepstatus      # 查看提醒状态
+/sleepoff         # 关闭提醒
 ```
 
 ## 技术栈
@@ -73,10 +83,24 @@ uv run chat.py
 
 ```
 telegram/
-├── chat.py          # 主程序：AI 聊天 + 睡眠提醒
-├── main.py          # 简单模板示例
-├── pyproject.toml   # 项目配置
-└── CLAUDE.md        # 开发者指南
+├── bot/                      # 核心代码包
+│   ├── __init__.py          # 包初始化
+│   ├── __main__.py          # 程序入口
+│   ├── config.py            # 配置管理
+│   ├── handlers/            # Telegram 命令处理器
+│   │   ├── base.py          # 基础命令 (start, help)
+│   │   ├── chat.py          # AI 聊天处理
+│   │   └── sleep.py         # 睡眠提醒命令
+│   └── services/            # 业务服务层
+│       ├── ai.py            # AI 服务（Vertex AI）
+│       └── reminder.py      # 睡眠提醒服务
+├── examples/                # 示例代码
+│   └── simple_bot.py        # 简单模板示例
+├── .env                     # 环境变量配置
+├── .env.example             # 环境变量示例
+├── pyproject.toml           # 项目配置
+├── CLAUDE.md                # 开发者指南
+└── README.md                # 项目说明
 ```
 
 ## 注意事项
